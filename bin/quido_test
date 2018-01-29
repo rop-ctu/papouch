@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+#
+# name: quido_test
+# auth: Libor Wagner
+# desc:
+
+""" Test papouch IO device
+
+Usage:
+  quido_test [options] eth <ip>
+
+Options:
+  -p PORT, --port PORT       [default: 10001]
+  -i N, --inputs N           [default: 4]
+  -o N, --outputs N          [default: 4]
+  --debug
+
+"""
+
+import logging
+import socket
+from docopt import docopt
+from papouch import Quido
+import time
+
+def main():
+    opt = docopt(__doc__)
+
+    if opt['--debug']:
+        logging.basicConfig(level='DEBUG')
+    else:
+        logging.basicConfig(level='INFO')
+        
+    if opt['eth']:
+        test_eth(opt)
+
+
+def test_eth(opt):
+    tcp_ip = opt['<ip>']
+    tcp_port = int(opt['--port'])
+    ninputs = int(opt['--inputs'])
+    noutputs = int(opt['--outputs'])
+
+    q = Quido()
+    q.connect_tcp(tcp_ip, tcp_port)
+
+    name = q.get_name()
+    
+    print "Name:           ", name[0]
+    print "Version:        ", name[1]
+    print "Temperature(1): ", q.get_temperature(1), 'C'
+    print
+    for i in range(ninputs):
+        val = q.get_input(i+1)
+        print "Input({}):        {}".format(i+1, val)
+
+    print
+    print "Setting all outputs to HIGH for 1 s"
+    for i in range(ninputs):
+        q.set_output(i+1, 1, 1)
+    
+
+    
+if __name__ == "__main__":
+    main()
