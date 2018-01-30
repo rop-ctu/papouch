@@ -2,7 +2,7 @@
 #
 # name: quido_test
 # auth: Libor Wagner
-# desc:
+# desc: Test for the quido device
 
 """ Test papouch IO device
 
