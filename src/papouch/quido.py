@@ -16,11 +16,12 @@ class Quido(object):
         self.tcp_port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.tcp_ip, self.tcp_port))
+        self.cmd = self.__cmd_tcp
 
     def check_reponse(self, resp):
         return len(resp) > 3 and resp[3] == '0'
 
-    def cmd(self, inst, data='', adr='$', buff=1000):
+    def __cmd_tcp(self, inst, data='', adr='$', buff=1000):
         msg = '*B' + adr + inst + data + '\r'
         self.socket.send(msg)
         log.debug("Cmd send: %s", msg)
@@ -108,7 +109,7 @@ class QuidoWeb(object):
 
     def __init__(self, ip):
         """Initialize Quido module
-        
+
         Arguments:
           ip    IP address of the module
 
@@ -125,7 +126,7 @@ class QuidoWeb(object):
             action = 'r'
         else:
             action = state
-    
+
         cmd = "http://{}/set.xml?type={}&id={}".format(self.ip, action, n)
 
         # Call GET request
