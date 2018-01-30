@@ -8,30 +8,92 @@
 """Controll Papouch Quido from the command line
 
 Usage:
-  quido-cli [options] out <n> [H|L] 
-  quido-cli [options] cmd <cmd>
+  quido-cli [options] seto <ch>...
+  quido-cli [options] geto <ch>...
+  quido-cli [options] geti <ch>...
+  quido-cli [options] info
+  quido-cli [options] <inst> [<data>] [<adr>]
+  quido-cli --help
 
 Options:
   --debug
   --help
-  --eth IP:PORT        [default: 192.168.1.254:1001]
+  --conn CONN    [default: usb:/dev/ttyUSB0]
+
+Examples:
+  quido-cli --con eth:192.168.1.254 read
+  quido-cli seto 1H 2L 3T
+  quido-cli geto 1 2 3
+  quido-cli geti 1 2 3
 """
 
-from papouch import QuidoETH
+import logging
+from docopt import docopt
+from papouch import Quido
 
 def main():
     opt = docopt(__doc__)
 
+    if opt['--debug']:
+        logging.basicConfig(level='DEBUG')
+    else:
+        logging.basicConfig(level='INFO')
 
-    quido = QuidoETH()
-    
-    
-    if opt['out']:
-        cmd_out(opt)
+    conn = opt['--conn'].split(':')
 
-def cmd_out(opt):
-    
-    
-    
+    # initialize quido
+    q = Quido()
+
+    # parse the conn argument
+    if conn[0] == 'eth':
+        ip = conn[1]
+        if len(conn) > 2:
+            pass
+        else:
+            q.connect_eth(ip)
+    if conn[0] == 'usb':
+        dev = conn[1]
+        if len(conn) > 2:
+            pass
+        else:
+            q.connect_usb(dev)
+    else:
+        pass
+
+    # process commands
+    if opt['seto']:
+        cmd_seto(q, opt)
+    elif opt['geto']:
+        for n in opt['<ch>']:
+            state = q.get_output(int(n))
+            print("Output {} is {}".format(n, 'HIGH' if state else 'LOW'))
+    elif opt['geti']:
+        for n in opt['<ch>']:
+            state = q.get_input(int(n))
+            print("Input {} is {}".format(n, 'HIGH' if state else 'LOW'))
+    else:
+        inst = opt['<inst>']
+        data = '' if opt['<data>'] is None else opt['<data>']
+        adr  = '$' if opt['<adr>'] is None else opt['<adr>']
+        print q.cmd(inst, data)
+
+
+def cmd_seto(q, opt):
+
+    for cmd in opt['<ch>']:
+        n = int(cmd[:-1])
+        a = cmd[-1]
+
+        if a in ['H', 'h']:
+            q.set_output(n, 1)
+        elif a in ['L', 'l']:
+            q.set_output(n, 0)
+        elif a in ['T', 't']:
+            q.set_output(n, not q.get_output(n))
+
+        state = q.get_output(int(n))
+        print("Output {} is {}".format(n, 'HIGH' if state else 'LOW'))
+
+
 if __name__ == "__main__":
     main()
