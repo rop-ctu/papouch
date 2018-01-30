@@ -13,7 +13,7 @@ class Quido(object):
     def __init__(self):
         self.connection = 'none'
 
-    def connect_tcp(self, ip, port):
+    def connect_tcp(self, ip, port=1001):
         self.connection = 'tcp'
         self.tcp_ip = ip
         self.tcp_port = port
@@ -30,7 +30,7 @@ class Quido(object):
         log.debug("Cmd recv: %s", recv)
         return recv
 
-    def connect_usb(self, dev, baud):
+    def connect_usb(self, dev, baud=115200):
         self.connection = 'serial'
         self.dev = dev
         self.baud = baud
@@ -103,7 +103,7 @@ class Quido(object):
         recv = self.cmd(inst, data)
 
         if self.check_reponse(recv):
-            return 1 if recv[4] == 'H' else 0
+            return True if recv[4] == 'H' else False
         else:
             log.error("Unable to get output, response: %s", recv)
             return False
