@@ -114,7 +114,7 @@ class Quido(object):
         recv = self.cmd(inst, data)
 
         if self.check_reponse(recv):
-            return 1 if recv[4] == 'H' else 0
+            return True if recv[4] == 'H' else False
         else:
             log.error("Unable to get input, response: %s", recv)
             return False
