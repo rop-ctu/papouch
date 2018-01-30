@@ -2,6 +2,8 @@
 import logging
 import requests
 import socket
+import serial
+import io
 
 log = logging.getLogger()
 
@@ -9,17 +11,16 @@ log = logging.getLogger()
 class Quido(object):
 
     def __init__(self):
-        pass
+        self.connection = 'none'
 
     def connect_tcp(self, ip, port):
+        self.connection = 'tcp'
         self.tcp_ip = ip
         self.tcp_port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.tcp_ip, self.tcp_port))
         self.cmd = self.__cmd_tcp
-
-    def check_reponse(self, resp):
-        return len(resp) > 3 and resp[3] == '0'
+        log.debug("Connected to tcp ip: %s port: %s", self.tcp_ip, self.tcp_port)
 
     def __cmd_tcp(self, inst, data='', adr='$', buff=1000):
         msg = '*B' + adr + inst + data + '\r'
@@ -28,6 +29,26 @@ class Quido(object):
         recv = self.socket.recv(buff)
         log.debug("Cmd recv: %s", recv)
         return recv
+
+    def connect_usb(self, dev, baud):
+        self.connection = 'serial'
+        self.dev = dev
+        self.baud = baud
+        self.ser = serial.Serial(self.dev, self.baud)
+        self.cmd = self.__cmd_serial
+        log.debug("Cennected to serial dev: %s baud: %d", self.dev, self.baud)
+
+    def __cmd_serial(self, inst, data='', adr='$', buff=1000):
+        msg = b'*B' + adr + inst + data + '\r'
+        self.ser.write(msg)
+        self.ser.flush()
+        log.debug("Serial write: %s", msg)
+        recv = read_util(self.ser)
+        log.debug("Serial read: %s", recv)
+        return recv
+
+    def check_reponse(self, resp):
+        return len(resp) > 3 and resp[3] == '0'
 
     def reset(self):
         inst = 'RE'
@@ -55,7 +76,7 @@ class Quido(object):
         recv = self.cmd(inst, data)
 
         if self.check_reponse(recv):
-            return float(recv[4:-2]) 
+            return float(recv[4:-2])
         else:
             log.error("Unable to read temperature, response: %s", recv)
             return None
@@ -97,6 +118,16 @@ class Quido(object):
         else:
             log.error("Unable to get input, response: %s", recv)
             return False
+
+
+def read_util(ser, eol=b'\r'):
+    buffer = ""
+    while True:
+        oneByte = ser.read(1)
+        if oneByte == eol:
+            return buffer
+        else:
+            buffer += oneByte.decode("ascii")
 
 
 class QuidoWeb(object):
