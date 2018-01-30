@@ -43,6 +43,7 @@ q.set_output(1, True) # => True
   - `set_output(n, state, duration=None) => bool`
   - `get_output(n) => bool`
   - `get_input(n) => bool`
+  - `connection => str`
 
 - `class papouch.QuidoWeb`
 
