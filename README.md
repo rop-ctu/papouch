@@ -1,7 +1,7 @@
 
 # Library for Papouch Devices
 
-This library provide python interface for the communication with the Papouch devices, namely the Quido family of IO modules. The library supports both ETH and USB variants, the RS232 was not tested.
+This library provide python interface for the communication with the Papouch devices, namely the Quido family of IO modules. The library supports both ETH and USB variants, the RS232 was not tested. For now the library supports just the Quido over Spinel 66 protocol.
 
 ## Tools
 
