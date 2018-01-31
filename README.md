@@ -58,3 +58,17 @@ Dependencies:
  - [requests](http://docs.python-requests.org/en/latest/)
  - [docopt](http://docopt.org/)
 
+Using pip:
+
+``` shell
+pip install git+http://gitlab.ciirc.cvut.cz/b635/papouch.git
+```
+
+Without pip:
+
+``` shell
+git clone http://gitlab.ciirc.cvut.cz/b635/papouch.git
+cd papouch
+python setup.py install
+```
+
