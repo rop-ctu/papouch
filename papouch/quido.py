@@ -4,6 +4,7 @@ import requests
 import socket
 import serial
 import io
+import time
 
 log = logging.getLogger()
 
@@ -20,12 +21,19 @@ class Quido(object):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.tcp_ip, self.tcp_port))
         self.cmd = self.__cmd_tcp
+        self.recv = self.__recv_tcp
+        self.cmd('IS', '0') # disable sending changes
         log.debug("Connected to tcp ip: %s port: %s", self.tcp_ip, self.tcp_port)
 
     def __cmd_tcp(self, inst, data='', adr='$', buff=1000):
         msg = '*B' + adr + inst + data + '\r'
         self.socket.send(msg)
         log.debug("Cmd send: %s", msg)
+        recv = self.__recv_tcp(buff)
+        log.debug("Cmd recv: %s", recv)
+        return recv
+
+    def __recv_tcp(self, buff):
         recv = self.socket.recv(buff)
         log.debug("Cmd recv: %s", recv)
         return recv
@@ -36,6 +44,7 @@ class Quido(object):
         self.baud = baud
         self.ser = serial.Serial(self.dev, self.baud)
         self.cmd = self.__cmd_serial
+        self.recv = self.__recv_serial
         log.debug("Cennected to serial dev: %s baud: %d", self.dev, self.baud)
 
     def __cmd_serial(self, inst, data='', adr='$', buff=1000):
@@ -43,6 +52,10 @@ class Quido(object):
         self.ser.write(msg)
         self.ser.flush()
         log.debug("Serial write: %s", msg)
+        recv = self.__recv_serial()
+        return recv
+
+    def __recv_serial(self, buff=None):
         recv = read_util(self.ser)
         log.debug("Serial read: %s", recv)
         return recv
@@ -118,6 +131,23 @@ class Quido(object):
         else:
             log.error("Unable to get input, response: %s", recv)
             return False
+
+    def wait_for_edge(self, n, timeout=None):
+        v0 = self.get_input(n)
+        v1 = v0
+        recv = self.cmd('IS', '1')
+
+        while v1 == v0:
+            recv = self.recv()
+            v1 = get_val_is(recv, n)
+
+        recv = self.cmd('IS', '0')
+        return v1
+
+
+def get_val_is(recv, n):
+    recv = recv[5:]
+    return True if recv[n-1] == 'H' else False
 
 
 def read_util(ser, eol=b'\r'):

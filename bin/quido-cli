@@ -12,6 +12,7 @@ Usage:
   quido-cli [options] geto <ch>...
   quido-cli [options] geti <ch>...
   quido-cli [options] info
+  quido-cli [options] monitor <ch>
   quido-cli [options] <inst> [<data>] [<adr>]
   quido-cli --help
 
@@ -71,11 +72,19 @@ def main():
         for n in opt['<ch>']:
             state = q.get_input(int(n))
             print("Input {} is {}".format(n, 'HIGH' if state else 'LOW'))
+    elif opt['monitor']:
+        cmd_monitor(q, opt)
     else:
         inst = opt['<inst>']
         data = '' if opt['<data>'] is None else opt['<data>']
         adr  = '$' if opt['<adr>'] is None else opt['<adr>']
         print q.cmd(inst, data)
+
+
+def cmd_monitor(q, opt):
+    while True:
+        val = q.wait_for_edge(int(opt["<ch>"][0]))
+        print opt["<ch>"][0], ":", 'H' if val else 'L'
 
 
 def cmd_seto(q, opt):
