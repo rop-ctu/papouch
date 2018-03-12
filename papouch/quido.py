@@ -8,6 +8,15 @@ import time
 
 log = logging.getLogger()
 
+class PapouchError(Exception):
+
+    def __init__(self, msg='', recv=None):
+        self.msg = msg
+        self.recv = recv
+
+    def __str__(self):
+        return repr(self.msg)
+
 
 class Quido(object):
 
@@ -135,13 +144,27 @@ class Quido(object):
     def wait_for_edge(self, n, timeout=None):
         v0 = self.get_input(n)
         v1 = v0
+
         recv = self.cmd('IS', '1')
+        if self.check_reponse(recv):
+            return True
+        else:
+            raise PapouchError("IS1 command failed", recv)
 
         while v1 == v0:
             recv = self.recv()
-            v1 = get_val_is(recv, n)
+
+            if self.check_reponse(recv):
+                raise PapouchError("Wrong reply", recv)
+            else:
+                v1 = get_val_is(recv, n)
 
         recv = self.cmd('IS', '0')
+        if self.check_reponse(recv):
+            return True
+        else:
+            raise PapouchError("IS0 command failed", recv)
+
         return v1
 
 
