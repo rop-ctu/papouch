@@ -33,17 +33,18 @@ q.set_output(1, True) # => True
 
 - `class papouch.Quido`
 
-  - `__init__()`
-  - `connect_tcp(ip, port=1001)`
-  - `connect_usb(dev, baud=115200)`
-  - `cmd(inst, data='', adr='$', buff=100)`
-  - `reset()`
-  - `get_name() => [...]`
-  - `get_temperature() => float`
-  - `set_output(n, state, duration=None) => bool`
-  - `get_output(n) => bool`
-  - `get_input(n) => bool`
-  - `connection => str`
+  - `.__init__()`
+  - `.connect_tcp(ip, port=1001)`
+  - `.connect_usb(dev, baud=115200)`
+  - `.cmd(inst, data='', adr='$', buff=100)`
+  - `.reset()`
+  - `.get_name() => [...]`
+  - `.get_temperature() => float`
+  - `.set_output(n, state, duration=None) => bool`
+  - `.get_output(n) => bool`
+  - `.get_input(n) => bool`
+  - `.connection => str`
+  - `.wait_for_edge(n) => bool` returns True for raising edge and False for falling edge for given input.
 
 - `class papouch.QuidoWeb`
 
