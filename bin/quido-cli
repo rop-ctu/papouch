@@ -82,9 +82,14 @@ def main():
 
 
 def cmd_monitor(q, opt):
-    while True:
-        val = q.wait_for_edge(int(opt["<ch>"][0]))
-        print opt["<ch>"][0], ":", 'H' if val else 'L'
+    try:
+        while True:
+            val = q.wait_for_edge(int(opt["<ch>"][0]))
+            print opt["<ch>"][0], ":", 'H' if val else 'L'
+    except KeyboardInterrupt:
+        print("Bye!")
+    except Exception as e:
+        print(str(e))
 
 
 def cmd_seto(q, opt):
