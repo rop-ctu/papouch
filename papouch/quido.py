@@ -146,9 +146,7 @@ class Quido(object):
         v1 = v0
 
         recv = self.cmd('IS', '1')
-        if self.check_reponse(recv):
-            return True
-        else:
+        if not self.check_reponse(recv):
             raise PapouchError("IS1 command failed", recv)
 
         while v1 == v0:
@@ -160,9 +158,7 @@ class Quido(object):
                 v1 = get_val_is(recv, n)
 
         recv = self.cmd('IS', '0')
-        if self.check_reponse(recv):
-            return True
-        else:
+        if not self.check_reponse(recv):
             raise PapouchError("IS0 command failed", recv)
 
         return v1
