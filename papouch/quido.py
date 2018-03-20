@@ -15,7 +15,7 @@ class PapouchError(Exception):
         self.recv = recv
 
     def __str__(self):
-        return repr(self.msg)
+        return repr(self.msg + ": " + self.recv)
 
 
 class Quido(object):
