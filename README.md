@@ -70,7 +70,7 @@ or without pip
 ``` shell
 git clone http://gitlab.ciirc.cvut.cz/b635/papouch.git
 cd papouch
-python setup.py install
+sudo python setup.py install
 ```
 
 or
@@ -78,7 +78,7 @@ or
 ``` shell
 git clone git@gitlab.ciirc.cvut.cz:b635/papouch.git
 cd papouch
-python setup.py install
+sudo python setup.py install
 ```
 
 ## ROS
@@ -89,7 +89,9 @@ In order to enable the ROS support clone this repository same as in the previous
 cs [ros/ssh] # your ros workspace
 git clone http://gitlab.ciirc.cvut.cz/b635/papouch.git
 cd papouch
-python setup.py install
+sudo python setup.py install
+catkin build
+source devel/setup.sh
 ```
 
 Then do the `catkin build` as normal in order to register the package. The ros node is then started with:
