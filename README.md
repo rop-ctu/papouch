@@ -80,3 +80,30 @@ git clone git@gitlab.ciirc.cvut.cz:b635/papouch.git
 cd papouch
 python setup.py install
 ```
+
+## ROS
+
+In order to enable the ROS support clone this repository same as in the previous examples without using pip but inside the ROS workspace i.e:
+
+``` shell
+cs [ros/ssh] # your ros workspace
+git clone http://gitlab.ciirc.cvut.cz/b635/papouch.git
+cd papouch
+python setup.py install
+```
+
+Then do the `catkin build` as normal in order to register the package. The ros node is then started with:
+
+``` shell
+rosrun papouch_ros quido_node --dev /dev/ttyACM0
+```
+
+Note that the quido device may appear under different name than `/dev/ttyACM0`. If you are using ETH version of the quido use the following command instead:
+
+``` shell
+rosrun papouch_ros quido_node --eth 192.168.1.2
+```
+
+Providing appropriate IP address of the device. The node then provides the following services:
+
+- `~write_io` with the service description [papouch_ros/WriteIO](papouch_ros/srv/WriteIO.srv). Use to write outputs of the quido module. Multiple outputs can be written using single request.
