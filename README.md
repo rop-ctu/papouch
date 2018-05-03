@@ -1,4 +1,3 @@
-
 # Library for Papouch Devices
 
 This library provide python interface for the communication with the Papouch devices, namely the Quido family of IO modules. The library supports both ETH and USB variants, the RS232 was not tested. For now the library supports just the Quido over Spinel 66 protocol.
@@ -9,6 +8,7 @@ This is a list of tools provided with the Papouch library that demonstrate the p
 
  - **quido-cli** Command line interface for the Quido family of devices.
  - **quido-test** Test utility for the Quido device.
+ - **quido-list** List all devices on the network segment, prints out MAC and IP addresses.
 
 ## Usage
 
