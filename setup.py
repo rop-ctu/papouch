@@ -14,7 +14,7 @@ setup(name='papouch',
       keywords='papouch spinel io driver',
       license='CTU',
       packages=['papouch'],
-      scripts=['bin/quido-cli', 'bin/quido-test'],
+      scripts=['bin/quido-cli', 'bin/quido-test', 'bin/quido-list'],
       install_requires=[
           'pyserial',
           'requests',
