@@ -29,7 +29,39 @@ q.set_output(1, True) # => True
 
 ```
 
-## Reference
+**quido-cli**
+
+```
+$ quido-cli -h
+Controll Papouch Quido from the command line
+
+Usage:
+  quido-cli [options] seto <ch>...
+  quido-cli [options] geto <ch>...
+  quido-cli [options] geti <ch>...
+  quido-cli [options] info
+  quido-cli [options] monitor <ch>
+  quido-cli [options] <inst> [<data>] [<adr>]
+  quido-cli --help
+
+Options:
+  --debug
+  --help
+  --conn CONN    [default: usb:/dev/ttyUSB0]
+
+Examples:
+  quido-cli --con eth:192.168.1.254 read
+  quido-cli seto 1H 2L 3T
+  quido-cli geto 1 2 3
+  quido-cli geti 1 2 3
+```
+
+**quido-list**
+
+```
+```
+
+## Library Reference
 
 - `class papouch.Quido`
 
