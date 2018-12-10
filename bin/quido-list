@@ -36,10 +36,10 @@ def main():
     print("Found {} devices.".format(found))
     comsocket.close()
 
+
 def show_mac(mac) -> str:
     s = '-'.join('{:02X}'.format(a) for a in mac)
     return s
-
 
 
 if __name__ == "__main__":
