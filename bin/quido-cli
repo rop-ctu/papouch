@@ -51,7 +51,7 @@ def main():
         if len(conn) > 2:
             pass
         else:
-            q.connect_eth(ip)
+            q.connect_tcp(ip)
     if conn[0] == 'usb':
         dev = conn[1]
         if len(conn) > 2:
