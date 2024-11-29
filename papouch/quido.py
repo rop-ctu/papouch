@@ -1,10 +1,9 @@
 
 import logging
+from typing import Any
 import requests
 import socket
 import serial
-import io
-import time
 
 log = logging.getLogger()
 
@@ -15,7 +14,7 @@ class PapouchError(Exception):
         self.recv = recv
 
     def __str__(self):
-        return repr(self.msg + ": " + self.recv)
+        return repr(self.msg + ": " + self.recv if self.recv else "")
 
 
 class Quido(object):
@@ -31,11 +30,11 @@ class Quido(object):
         self.socket.connect((self.tcp_ip, self.tcp_port))
         self.cmd = self.__cmd_tcp
         self.recv = self.__recv_tcp
-        self.cmd('IS', '0') # disable sending changes
+        self.cmd(b'IS', b'0') # disable sending changes
         log.debug("Connected to tcp ip: %s port: %s", self.tcp_ip, self.tcp_port)
 
-    def __cmd_tcp(self, inst, data='', adr='$', buff=1000):
-        msg = '*B' + adr + inst + data + '\r'
+    def __cmd_tcp(self, inst, data=b'', adr=b'$', buff=1000):
+        msg = b'*B' + adr + inst + data + b'\r'
         self.socket.send(msg)
         log.debug("Cmd send: %s", msg)
         recv = self.__recv_tcp(buff)
@@ -56,8 +55,8 @@ class Quido(object):
         self.recv = self.__recv_serial
         log.debug("Cennected to serial dev: %s baud: %d", self.dev, self.baud)
 
-    def __cmd_serial(self, inst, data='', adr='$', buff=1000):
-        msg = b'*B' + adr + inst + data + '\r'
+    def __cmd_serial(self, inst, data=b'', adr=b'$', buff=1000):
+        msg = b'*B' + adr + inst + data + b'\r'
         self.ser.write(msg)
         self.ser.flush()
         log.debug("Serial write: %s", msg)
@@ -73,7 +72,7 @@ class Quido(object):
         return len(resp) > 3 and resp[3] == '0'
 
     def reset(self):
-        inst = 'RE'
+        inst = b'RE'
         recv = self.cmd(inst)
 
         if self.check_reponse(recv):
@@ -83,7 +82,7 @@ class Quido(object):
             return None
 
     def get_name(self):
-        inst = '?'
+        inst = b'?'
         recv = self.cmd(inst)
 
         if self.check_reponse(recv):
@@ -93,8 +92,8 @@ class Quido(object):
             return None
 
     def get_temperature(self, n):
-        inst = 'TR'
-        data = str(n)
+        inst = b'TR'
+        data = as_bytes(n)
         recv = self.cmd(inst, data)
 
         if self.check_reponse(recv):
@@ -105,12 +104,12 @@ class Quido(object):
 
     def set_output(self, n, state, duration=None):
         if duration is None:
-            inst = 'OS'
-            data = str(n) + 'H' if state else str(n) + 'L'
+            inst = b'OS'
+            data = as_bytes(n) + b'H' if state else as_bytes(n) + b'L'
         else:
-            inst = 'OT'
-            data = str(n) + 'H' if state else str(n) + 'L'
-            data += str(int(duration*2))
+            inst = b'OT'
+            data = as_bytes(n) + b'H' if state else as_bytes(n) + b'L'
+            data += as_bytes(int(duration*2))
         recv = self.cmd(inst, data)
 
         if self.check_reponse(recv):
@@ -121,7 +120,7 @@ class Quido(object):
 
     def get_output(self, n):
         inst = 'OR'
-        data = str(n)
+        data = as_bytes(n)
         recv = self.cmd(inst, data)
 
         if self.check_reponse(recv):
@@ -131,8 +130,8 @@ class Quido(object):
             return False
 
     def get_input(self, n):
-        inst = 'IR'
-        data = str(n)
+        inst = b'IR'
+        data = as_bytes(n)
         recv = self.cmd(inst, data)
 
         if self.check_reponse(recv):
@@ -141,11 +140,11 @@ class Quido(object):
             log.error("Unable to get input, response: %s", recv)
             return False
 
-    def wait_for_edge(self, n, timeout=None):
+    def wait_for_edge(self, n: int, timeout=None):
         v0 = self.get_input(n)
         v1 = v0
 
-        recv = self.cmd('IS', '1')
+        recv = self.cmd(b'IS', b'1')
         if not self.check_reponse(recv):
             raise PapouchError("IS1 command failed", recv)
 
@@ -157,7 +156,7 @@ class Quido(object):
             else:
                 v1 = get_val_is(recv, n)
 
-        recv = self.cmd('IS', '0')
+        recv = self.cmd(b'IS', b'0')
         if not self.check_reponse(recv):
             raise PapouchError("IS0 command failed", recv)
 
@@ -177,6 +176,10 @@ def read_util(ser, eol=b'\r'):
             return buffer
         else:
             buffer += oneByte.decode("ascii")
+
+
+def as_bytes(val: Any):
+    return str(val).encode()
 
 
 class QuidoWeb(object):

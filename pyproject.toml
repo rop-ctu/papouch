@@ -1,0 +1,15 @@
+[project]
+name = "papouch"
+version = "0.2.0"
+dependencies = [
+  "pyserial",
+  "requests",
+]
+
+[project.scripts]
+quido-list = "papouch.scripts.list:main"
+quido-test = "papouch.scripts.test:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

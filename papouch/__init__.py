@@ -1,2 +1,1 @@
-
-from quido import Quido, QuidoWeb
+from .quido import Quido, QuidoWeb
