@@ -119,7 +119,7 @@ class Quido(object):
             return False
 
     def get_output(self, n):
-        inst = 'OR'
+        inst = b'OR'
         data = as_bytes(n)
         recv = self.cmd(inst, data)
 

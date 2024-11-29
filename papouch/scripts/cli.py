@@ -6,10 +6,12 @@
 # desc: Command line interface for Papouch Quido
 
 import argparse
-import argparse
 import logging
+from typing import List
 from papouch import Quido
-from papouch.scripts.test import parse_cmdl_arguments
+from papouch.quido import as_bytes
+
+log = logging.getLogger("quido-cli")
 
 
 def parse_cmdl_arguments():
@@ -59,7 +61,8 @@ def main():
     else:
         logging.basicConfig(level='INFO')
 
-    conn = opt['--conn'].split(':')
+    log.debug("Command line arguments: \n    %s", str(args))
+    conn = args.conn.split(':')
 
     # initialize quido
     q = Quido()
@@ -81,39 +84,39 @@ def main():
         pass
 
     # process commands
-    if opt['seto']:
-        cmd_seto(q, opt)
-    elif opt['geto']:
-        for n in opt['<ch>']:
+    if args.command == "seto":
+        cmd_seto(q, args.channels)
+    elif args.command == "geto":
+        for n in args.channels:
             state = q.get_output(int(n))
-            print("Output {} is {}".format(n, 'HIGH' if state else 'LOW'))
-    elif opt['geti']:
-        for n in opt['<ch>']:
+            log.info("Output {} is {}".format(n, 'HIGH' if state else 'LOW'))
+    elif args.command == "geti":
+        for n in args.channels:
             state = q.get_input(int(n))
-            print("Input {} is {}".format(n, 'HIGH' if state else 'LOW'))
-    elif opt['monitor']:
-        cmd_monitor(q, opt)
+            log.info("Input {} is {}".format(n, 'HIGH' if state else 'LOW'))
+    elif args.command == "monitor":
+        cmd_monitor(q, args.channels)
     else:
-        inst = opt['<inst>']
-        data = '' if opt['<data>'] is None else opt['<data>']
-        adr  = '$' if opt['<adr>'] is None else opt['<adr>']
-        print q.cmd(inst, data)
+        inst = args.instruction
+        data = b'' if args.data is None else args.data
+        adr  = b'$' if args.address is None else args.address
+        log.info(q.cmd(inst, as_bytes(data)))
 
 
-def cmd_monitor(q, opt):
+def cmd_monitor(q, channel: str):
     try:
         while True:
-            val = q.wait_for_edge(int(opt["<ch>"][0]))
-            print opt["<ch>"][0], ":", 'H' if val else 'L'
+            val = q.wait_for_edge(int(channel))
+            log.info(f"{channel}: {'H' if val else 'L'}")
     except KeyboardInterrupt:
         print("Bye!")
     except Exception as e:
         print(str(e))
 
 
-def cmd_seto(q, opt):
+def cmd_seto(q, channels: List[str]):
 
-    for cmd in opt['<ch>']:
+    for cmd in channels:
         n = int(cmd[:-1])
         a = cmd[-1]
 
@@ -125,7 +128,7 @@ def cmd_seto(q, opt):
             q.set_output(n, not q.get_output(n))
 
         state = q.get_output(int(n))
-        print("Output {} is {}".format(n, 'HIGH' if state else 'LOW'))
+        log.info("Output {} is {}".format(n, 'HIGH' if state else 'LOW'))
 
 
 if __name__ == "__main__":

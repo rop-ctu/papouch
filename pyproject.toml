@@ -7,6 +7,7 @@ dependencies = [
 ]
 
 [project.scripts]
+quido-cli = "papouch.scripts.cli:main"
 quido-list = "papouch.scripts.list:main"
 quido-test = "papouch.scripts.test:main"
 
