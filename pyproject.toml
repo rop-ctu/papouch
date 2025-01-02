@@ -3,6 +3,7 @@ name = "papouch"
 version = "0.2.0"
 dependencies = [
   "pyserial",
+  "pyserial-asyncio",
   "requests",
 ]
 
@@ -10,6 +11,7 @@ dependencies = [
 quido-cli = "papouch.scripts.cli:main"
 quido-list = "papouch.scripts.list:main"
 quido-test = "papouch.scripts.test:main"
+quido-async-test = "papouch.scripts.test_async:main"
 
 [build-system]
 requires = ["hatchling"]
