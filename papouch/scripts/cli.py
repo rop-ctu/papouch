@@ -96,12 +96,19 @@ def main():
             log.info("Input {} is {}".format(n, 'HIGH' if state else 'LOW'))
     elif args.command == "monitor":
         cmd_monitor(q, args.channels)
+    elif args.command == "info":
+        cmd_info(q)
     else:
         inst = args.instruction
         data = b'' if args.data is None else args.data
         adr  = b'$' if args.address is None else args.address
         log.info(q.cmd(inst, as_bytes(data)))
 
+def cmd_info(q):
+    name = q.get_name()
+    print("Name:           ", name[0])
+    print("Version:        ", name[1])
+    print("Temperature(1): ", q.get_temperature(1), 'C')
 
 def cmd_monitor(q, channel: str):
     try:
