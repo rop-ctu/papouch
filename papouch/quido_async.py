@@ -21,7 +21,6 @@ class QuidoUSB():
         self.reader = None
         self.writer = None
         self.queue = asyncio.Queue()
-        self.expecting_response = asyncio.Event()
         self._input_change_cb: Optional[Callable[[List[bool]], Awaitable[None]]] = None
 
     async def connect(self):
@@ -46,22 +45,19 @@ class QuidoUSB():
                 log.debug("Serial read:  %s", recv) # double space is intentional to align with serial write
                 recv = recv.decode().strip()
 
-                if self.expecting_response.is_set():
+                if not self._process_unsolicited_msg(recv):
                     await self.queue.put(recv)
-                    self.expecting_response.clear()
-                else:
-                    await self._process_unsolicited_msg(recv)
-
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 raise QuidoError(f"Failed to read from serial: {e}")
 
     async def _process_unsolicited_msg(self, msg: str) -> bool:
-        if (len(msg) >= 3 and msg[:2] == "*B" and msg[3] == "D" and self._input_change_cb is not None):
-            inputs = [True if v == "H" else False for v in msg[5:].replace(" ", "")]
-            log.debug("Input change notification:  %s", str(inputs))
-            await self._input_change_cb(inputs)
+        if (len(msg) >= 3 and msg[:2] == "*B" and msg[3] == "D"):
+            if self._input_change_cb is not None:
+                inputs = [True if v == "H" else False for v in msg[5:].replace(" ", "")]
+                log.debug("Input change notification:  %s", str(inputs))
+                await self._input_change_cb(inputs)
             return True
         return False
 
@@ -75,7 +71,6 @@ class QuidoUSB():
         self.writer.write(msg)
         await self.writer.drain()
 
-        self.expecting_response.set()
         try:
             resp = await asyncio.wait_for(self.queue.get(), timeout=self.timeout)
             return resp
@@ -83,8 +78,6 @@ class QuidoUSB():
             raise QuidoError(f"Timeout while executing '{msg}'")
         except Exception as e:
             raise QuidoError(f"Exception while executing '{msg}': {e}")
-        finally:
-            self.expecting_response.clear()
 
     async def close(self):
         if self.writer:
