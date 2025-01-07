@@ -1,7 +1,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Callable, List, Optional
 import serial
 import serial_asyncio
 
@@ -23,7 +23,7 @@ class QuidoUSB():
         self.writer = None
         self.queue = asyncio.Queue()
         self.expecting_response = asyncio.Event()
-        self.input_change_cb = None
+        self._input_change_cb: Optional[Callable[[List[bool]], None]] = None
 
     async def connect(self):
         try:
@@ -51,16 +51,20 @@ class QuidoUSB():
                     await self.queue.put(recv)
                     self.expecting_response.clear()
                 else:
-                    self.process_unsolicited_msg(recv)
+                    self._process_unsolicited_msg(recv)
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 raise QuidoError(f"Failed to read from serial: {e}")
 
-    def process_unsolicited_msg(self, msg):
-        log.debug("Unsolicited:  %s", msg) # double space is intentional to align with serial write
-        pass
+    def _process_unsolicited_msg(self, msg: str) -> bool:
+        if (len(msg) >= 3 and msg[:2] == "*B" and msg[3] == "D" and self._input_change_cb is not None):
+            inputs = [True if v == "H" else False for v in msg[5:].replace(" ", "")]
+            log.debug("Input change notification:  %s", str(inputs))
+            self._input_change_cb(inputs)
+            return True
+        return False
 
     async def _cmd(self, inst, data=b'', adr=b'$'):
         if not self.writer:
@@ -125,7 +129,7 @@ class QuidoUSB():
             log.error("Unable to read temperature, response: %s", recv)
             return None
 
-    async def set_output(self, n, state, duration=None, adr=b'$'):
+    async def set_output(self, n, state, duration=None, adr=b'$') -> bool:
         if duration is None:
             inst = b'OS'
             data = as_bytes(n) + b'H' if state else as_bytes(n) + b'L'
@@ -141,7 +145,7 @@ class QuidoUSB():
             log.error("Unable to set output, response: %s", recv)
             return False
 
-    async def get_output(self, n, adr=b'$'):
+    async def get_output(self, n, adr=b'$') -> bool:
         inst = b'OR'
         data = as_bytes(n)
         recv = await self._cmd(inst, data, adr=adr)
@@ -152,7 +156,7 @@ class QuidoUSB():
             log.error("Unable to get output, response: %s", recv)
             return False
 
-    async def get_input(self, n, adr=b'$'):
+    async def get_input(self, n, adr=b'$') -> bool:
         inst = b'IR'
         data = as_bytes(n)
         recv = await self._cmd(inst, data, adr=adr)
@@ -163,6 +167,27 @@ class QuidoUSB():
             log.error("Unable to get input, response: %s", recv)
             return False
 
+    async def set_change_reporting(self, enabled: bool, adr=b'$') -> bool:
+        value = b'1' if enabled else b'0'
+        recv = self._cmd(b'IS', value, adr=adr)
+        if self.check_reponse(recv, adr):
+            return True
+        else:
+            log.error("Failed to set change reporting, response: %s", recv)
+            return False
+
+    async def set_input_change_cb(self, cb: Callable[[List[bool]], None]):
+        if self._input_change_cb is not None:
+            raise QuidoError("Input change handler already set")
+        self._input_change_cb = cb
+
+    async def clear_input_change_cb(self):
+        self._input_change_cb = None
+
+
+def parse_automatic_reply(recv, n):
+    recv = recv[5:]
+    return True if recv[n-1] == 'H' else False
 
 def as_bytes(val: Any):
     return str(val).encode()
