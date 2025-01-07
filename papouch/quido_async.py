@@ -1,7 +1,7 @@
 
 import asyncio
 import logging
-from typing import Any, Callable, List, Optional
+from typing import Any, Awaitable, Callable, List, Optional
 import serial
 import serial_asyncio
 
@@ -23,7 +23,7 @@ class QuidoUSB():
         self.writer = None
         self.queue = asyncio.Queue()
         self.expecting_response = asyncio.Event()
-        self._input_change_cb: Optional[Callable[[List[bool]], None]] = None
+        self._input_change_cb: Optional[Callable[[List[bool]], Awaitable[Any]]] = None
 
     async def connect(self):
         try:
@@ -51,18 +51,18 @@ class QuidoUSB():
                     await self.queue.put(recv)
                     self.expecting_response.clear()
                 else:
-                    self._process_unsolicited_msg(recv)
+                    await self._process_unsolicited_msg(recv)
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 raise QuidoError(f"Failed to read from serial: {e}")
 
-    def _process_unsolicited_msg(self, msg: str) -> bool:
+    async def _process_unsolicited_msg(self, msg: str) -> bool:
         if (len(msg) >= 3 and msg[:2] == "*B" and msg[3] == "D" and self._input_change_cb is not None):
             inputs = [True if v == "H" else False for v in msg[5:].replace(" ", "")]
             log.debug("Input change notification:  %s", str(inputs))
-            self._input_change_cb(inputs)
+            await self._input_change_cb(inputs)
             return True
         return False
 
