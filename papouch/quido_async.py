@@ -118,7 +118,7 @@ class QuidoUSB():
             log.error("Unable to read name, response: %s", recv)
             return None
 
-    async def get_temperature(self, n, adr=b'$'):
+    async def get_temperature(self, n=1, adr=b'$'):
         inst = b'TR'
         data = as_bytes(n)
         recv = await self._cmd(inst, data, adr=adr)

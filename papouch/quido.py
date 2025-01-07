@@ -91,7 +91,7 @@ class Quido(object):
             log.error("Unable to read name, response: %s", recv)
             return None
 
-    def get_temperature(self, n):
+    def get_temperature(self, n=1):
         inst = b'TR'
         data = as_bytes(n)
         recv = self.cmd(inst, data)
