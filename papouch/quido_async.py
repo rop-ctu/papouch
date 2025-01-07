@@ -2,7 +2,6 @@
 import asyncio
 import logging
 from typing import Any, Awaitable, Callable, List, Optional
-import serial
 import serial_asyncio
 
 
@@ -23,7 +22,7 @@ class QuidoUSB():
         self.writer = None
         self.queue = asyncio.Queue()
         self.expecting_response = asyncio.Event()
-        self._input_change_cb: Optional[Callable[[List[bool]], Awaitable[Any]]] = None
+        self._input_change_cb: Optional[Callable[[List[bool]], Awaitable[None]]] = None
 
     async def connect(self):
         try:
@@ -176,7 +175,7 @@ class QuidoUSB():
             log.error("Failed to set change reporting, response: %s", recv)
             return False
 
-    def set_input_change_cb(self, cb: Callable[[List[bool]], None]):
+    def set_input_change_cb(self, cb: Callable[[List[bool]], Awaitable[None]]):
         if self._input_change_cb is not None:
             raise QuidoError("Input change handler already set")
         self._input_change_cb = cb
