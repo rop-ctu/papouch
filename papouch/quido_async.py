@@ -45,7 +45,7 @@ class QuidoUSB():
                 log.debug("Serial read:  %s", recv) # double space is intentional to align with serial write
                 recv = recv.decode().strip()
 
-                if not self._process_unsolicited_msg(recv):
+                if not await self._process_unsolicited_msg(recv):
                     await self.queue.put(recv)
             except asyncio.CancelledError:
                 break
