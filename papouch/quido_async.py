@@ -45,19 +45,19 @@ class QuidoUSB():
                 log.debug("Serial read:  %s", recv) # double space is intentional to align with serial write
                 recv = recv.decode().strip()
 
-                if not await self._process_unsolicited_msg(recv):
+                if not self._process_unsolicited_msg(recv):
                     await self.queue.put(recv)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 raise QuidoError(f"Failed to read from serial: {e}")
 
-    async def _process_unsolicited_msg(self, msg: str) -> bool:
+    def _process_unsolicited_msg(self, msg: str) -> bool:
         if (len(msg) >= 3 and msg[:2] == "*B" and msg[3] == "D"):
             if self._input_change_cb is not None:
                 inputs = [True if v == "H" else False for v in msg[5:].replace(" ", "")]
                 log.debug("Input change notification:  %s", str(inputs))
-                await self._input_change_cb(inputs)
+                asyncio.create_task(self._input_change_cb(inputs))
             return True
         return False
 
