@@ -169,7 +169,7 @@ class QuidoUSB():
 
     async def set_change_reporting(self, enabled: bool, adr=b'$') -> bool:
         value = b'1' if enabled else b'0'
-        recv = self._cmd(b'IS', value, adr=adr)
+        recv = await self._cmd(b'IS', value, adr=adr)
         if self.check_reponse(recv, adr):
             return True
         else:
