@@ -176,12 +176,12 @@ class QuidoUSB():
             log.error("Failed to set change reporting, response: %s", recv)
             return False
 
-    async def set_input_change_cb(self, cb: Callable[[List[bool]], None]):
+    def set_input_change_cb(self, cb: Callable[[List[bool]], None]):
         if self._input_change_cb is not None:
             raise QuidoError("Input change handler already set")
         self._input_change_cb = cb
 
-    async def clear_input_change_cb(self):
+    def clear_input_change_cb(self):
         self._input_change_cb = None
 
 
