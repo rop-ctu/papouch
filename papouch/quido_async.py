@@ -116,7 +116,10 @@ class QuidoUSB():
         recv = await self._cmd(inst, data, adr=adr)
 
         if self.check_reponse(recv, adr):
-            return float(recv[4:-1])
+            try:
+                return float(recv[4:-1])
+            except ValueError:
+                raise QuidoError(f"Failed to parse temperature from: {recv}")
         else:
             log.error("Unable to read temperature, response: %s", recv)
             return None
