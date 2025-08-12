@@ -7,6 +7,7 @@
 
 import argparse
 import logging
+import sys
 from typing import List
 from papouch import Quido
 from papouch.quido import as_bytes
@@ -81,7 +82,8 @@ def main():
         else:
             q.connect_usb(dev)
     else:
-        pass
+        log.error("No valid connection method {args.conn}")
+        sys.exit(1)
 
     # process commands
     if args.command == "seto":
