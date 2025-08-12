@@ -41,7 +41,7 @@ class Quido(object):
         log.debug("Cmd recv: %s", recv)
         return recv
 
-    def __recv_tcp(self, buff):
+    def __recv_tcp(self, buff=1000):
         recv = self.socket.recv(buff)
         log.debug("Cmd recv: %s", recv)
         return recv
@@ -53,7 +53,7 @@ class Quido(object):
         self.ser = serial.Serial(self.dev, self.baud)
         self.cmd = self.__cmd_serial
         self.recv = self.__recv_serial
-        log.debug("Cennected to serial dev: %s baud: %d", self.dev, self.baud)
+        log.debug("Connected to serial dev: %s baud: %d", self.dev, self.baud)
 
     def __cmd_serial(self, inst, data=b'', adr=b'$', buff=1000):
         msg = b'*B' + adr + inst + data + b'\r'
