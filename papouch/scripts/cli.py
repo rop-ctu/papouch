@@ -106,7 +106,7 @@ def main():
         inst = args.instruction
         data = b'' if args.data is None else args.data
         adr  = b'$' if args.address is None else args.address
-        log.info(q.cmd(inst, as_bytes(data)))
+        log.info(q.cmd(inst, as_bytes(data), adr=adr))
 
 def cmd_info(q):
     name = q.get_name()
