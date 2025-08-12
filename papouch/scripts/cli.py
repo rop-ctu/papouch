@@ -48,7 +48,7 @@ def parse_cmdl_arguments():
 
     # Options
     parser.add_argument("--debug", action="store_true", help="Debug mode")
-    parser.add_argument("--conn", type=str, default="usb:/dev/ttyUSB0", help="Connection string")
+    parser.add_argument("--conn", type=str, default="usb:/dev/ttyUSB0", help="Connection string either 'usb:/dev/ttyUSBx' or 'eth:192.16.1.1'")
 
     args = parser.parse_args()
     return args
@@ -72,13 +72,15 @@ def main():
     if conn[0] == 'eth':
         ip = conn[1]
         if len(conn) > 2:
-            pass
+            log.error("Wrong number of connection argumes {args.conn}")
+            sys.exit(1)
         else:
             q.connect_tcp(ip)
     if conn[0] == 'usb':
         dev = conn[1]
         if len(conn) > 2:
-            pass
+            log.error("Wrong number of connection argumes {args.conn}")
+            sys.exit(1)
         else:
             q.connect_usb(dev)
     else:
