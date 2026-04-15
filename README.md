@@ -45,12 +45,30 @@ quido-cli --conn eth:192.168.1.254 inst OR 1
 Broadcast discovery is sent across all active IPv4 interfaces automatically.
 
 ``` shell
-quido-list
+sudo quido-list
 # 01 mac: 00-1A-2B-3C-4D-5E ip: 192.168.1.123
 # Found 1 devices.
 
-quido-list --interface eno1
-quido-list --timeout 1.5
+sudo quido-list --interface eno1
+sudo quido-list --timeout 1.5
+```
+
+``` text
+$ quido-list --help
+usage: quido-list [-h] [-i INTERFACE] [-t TIMEOUT]
+
+Discover Papouch Quido devices by UDP broadcast on network interfaces.
+
+options:
+  -h, --help            show this help message and exit
+  -i, --interface INTERFACE
+                        Limit discovery to one network interface (for example:
+                        eno1)
+  -t, --timeout TIMEOUT
+                        Discovery timeout in seconds [default: 3.0]
+
+Note: discovery uses Linux raw sockets (AF_PACKET). Run as root or grant
+CAP_NET_RAW (for example via sudo).
 ```
 
 **quido-test**

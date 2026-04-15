@@ -21,10 +21,7 @@
 
 ## Known gotchas
 - README command examples are partly stale vs code (`--con` typo and ROS `--dev` example).
-- TCP default port is inconsistent:
-  - Library default in `papouch/quido.py`: `Quido.connect_tcp(..., port=1001)`.
-  - Script common args default in `papouch/scripts/common.py`: `--port 10001`.
-  Preserve intent when editing and call out any port-change impact.
+- TCP defaults are aligned to `1001` in both library and script options; preserve this unless there is a protocol-level reason to change it.
 - No configured automated lint/typecheck/unit-test/CI in this repo; `quido-test` scripts are hardware smoke tools.
 
 ## Code style and documentation

@@ -222,7 +222,14 @@ def run_discovery_on(iface: Iface, timeout: float = DEFAULT_TIMEOUT):
 
 
 def parse_cmdl_arguments():
-    parser = argparse.ArgumentParser("quido-list")
+    parser = argparse.ArgumentParser(
+        "quido-list",
+        description="Discover Papouch Quido devices by UDP broadcast on network interfaces.",
+        epilog=(
+            "Note: discovery uses Linux raw sockets (AF_PACKET). "
+            "Run as root or grant CAP_NET_RAW (for example via sudo)."
+        ),
+    )
     parser.add_argument(
         "-i",
         "--interface",
