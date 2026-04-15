@@ -10,39 +10,45 @@ import argparse
 
 PORT = 30718
 PAYLOAD = b"\x00\x01\x00\xf6"
+DEFAULT_TIMEOUT = 3.0
 
 ETH_P_ALL = 0x0003
 ETH_P_IP = 0x0800
 
 # ---- helpers ----
 
+
 def get_iface_mac(iface):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     info = fcntl.ioctl(
         s.fileno(),
         0x8927,  # SIOCGIFHWADDR
-        struct.pack('256s', iface.encode('utf-8'))
+        struct.pack("256s", iface.encode("utf-8")),
     )
     return info[18:24]
+
 
 def get_iface_ip(iface):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     info = fcntl.ioctl(
         s.fileno(),
         0x8915,  # SIOCGIFADDR
-        struct.pack('256s', iface.encode('utf-8'))
+        struct.pack("256s", iface.encode("utf-8")),
     )
     return socket.inet_ntoa(info[20:24])
 
+
 def checksum(data):
     if len(data) % 2:
-        data += b'\x00'
-    s = sum(struct.unpack("!%dH" % (len(data)//2), data))
-    s = (s >> 16) + (s & 0xffff)
+        data += b"\x00"
+    s = sum(struct.unpack("!%dH" % (len(data) // 2), data))
+    s = (s >> 16) + (s & 0xFFFF)
     s += s >> 16
-    return ~s & 0xffff
+    return ~s & 0xFFFF
+
 
 # ---- build headers ----
+
 
 def build_ip(src_ip, dst_ip, payload_len):
     ver_ihl = 0x45
@@ -57,19 +63,36 @@ def build_ip(src_ip, dst_ip, payload_len):
     src = socket.inet_aton(src_ip)
     dst = socket.inet_aton(dst_ip)
 
-    header = struct.pack("!BBHHHBBH4s4s",
-        ver_ihl, tos, total_len, ident,
-        flags_frag, ttl, proto, chksum,
-        src, dst
+    header = struct.pack(
+        "!BBHHHBBH4s4s",
+        ver_ihl,
+        tos,
+        total_len,
+        ident,
+        flags_frag,
+        ttl,
+        proto,
+        chksum,
+        src,
+        dst,
     )
 
     chksum = checksum(header)
 
-    return struct.pack("!BBHHHBBH4s4s",
-        ver_ihl, tos, total_len, ident,
-        flags_frag, ttl, proto, chksum,
-        src, dst
+    return struct.pack(
+        "!BBHHHBBH4s4s",
+        ver_ihl,
+        tos,
+        total_len,
+        ident,
+        flags_frag,
+        ttl,
+        proto,
+        chksum,
+        src,
+        dst,
     )
+
 
 def build_udp(src_port, dst_port, payload):
     length = 8 + len(payload)
@@ -110,11 +133,12 @@ def list_active_ifaces() -> List[Iface]:
 
     return result
 
-def run_discovery_on(iface: Iface, timeout: float = 3.0):
+
+def run_discovery_on(iface: Iface, timeout: float = DEFAULT_TIMEOUT):
     src_mac = iface.mac
     src_ip = iface.ip
 
-    dst_mac = b'\xff\xff\xff\xff\xff\xff'
+    dst_mac = b"\xff\xff\xff\xff\xff\xff"
     dst_ip = "255.255.255.255"
 
     eth_header = struct.pack("!6s6sH", dst_mac, src_mac, ETH_P_IP)
@@ -132,46 +156,42 @@ def run_discovery_on(iface: Iface, timeout: float = 3.0):
     deadline = time.monotonic() + timeout
     found = 0
 
-    try:
-        while True:
-            remaining = deadline - time.monotonic()
-            if remaining < 0:
-                break
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
 
-            readable, _, _ = select.select([sock], [], [], remaining)
-            if not readable:
-                break
+        readable, _, _ = select.select([sock], [], [], remaining)
+        if not readable:
+            break
 
-            pkt, _ = sock.recvfrom(65535)
+        pkt, _ = sock.recvfrom(65535)
 
-            # --- Ethernet ---
-            eth_proto = struct.unpack("!H", pkt[12:14])[0]
-            if eth_proto != ETH_P_IP:
-                continue
+        # --- Ethernet ---
+        eth_proto = struct.unpack("!H", pkt[12:14])[0]
+        if eth_proto != ETH_P_IP:
+            continue
 
-            # --- IP ---
-            ip_header = pkt[14:34]
-            proto = ip_header[9]
-            if proto != 17:  # UDP
-                continue
+        # --- IP ---
+        ip_header = pkt[14:34]
+        proto = ip_header[9]
+        if proto != 17:  # UDP
+            continue
 
-            src_ip = socket.inet_ntoa(ip_header[12:16])
+        src_ip = socket.inet_ntoa(ip_header[12:16])
 
-            # --- UDP ---
-            udp_header = pkt[34:42]
-            src_port = struct.unpack("!H", udp_header[0:2])[0]
+        # --- UDP ---
+        udp_header = pkt[34:42]
+        src_port = struct.unpack("!H", udp_header[0:2])[0]
 
-            if src_port != PORT:
-                continue
+        if src_port != PORT:
+            continue
 
-            # --- Payload ---
-            src_mac = pkt[6:12]
+        # --- Payload ---
+        src_mac = pkt[6:12]
 
-            found += 1
-            print(f"{found:02d} mac: {':'.join(f'{b:02x}' for b in src_mac)} ip: {src_ip}")
-
-    except socket.timeout:
-        pass
+        found += 1
+        print(f"{found:02d} mac: {':'.join(f'{b:02x}' for b in src_mac)} ip: {src_ip}")
 
     print(f"Found {found} devices")
 
@@ -180,15 +200,38 @@ def run_discovery_on(iface: Iface, timeout: float = 3.0):
 
 # ---- main ----
 
+
 def parse_cmdl_arguments():
     parser = argparse.ArgumentParser("quido-list")
+    parser.add_argument(
+        "-i",
+        "--interface",
+        type=str,
+        help="Limit discovery to one network interface (for example: eno1)",
+    )
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        type=float,
+        default=DEFAULT_TIMEOUT,
+        help=f"Discovery timeout in seconds [default: {DEFAULT_TIMEOUT}]",
+    )
 
     args = parser.parse_args()
     return args
 
 
 def main():
-    for iface in list_active_ifaces():
+    args = parse_cmdl_arguments()
+    ifaces = list_active_ifaces()
+
+    if args.interface:
+        ifaces = [iface for iface in ifaces if iface.name == args.interface]
+        if not ifaces:
+            print(f"Interface '{args.interface}' not found or not active")
+            return
+
+    for iface in ifaces:
         print(f"Running discovery on iface = {iface}")
 
         if iface.ip is None:
@@ -196,9 +239,10 @@ def main():
             continue
 
         try:
-            run_discovery_on(iface)
+            run_discovery_on(iface, timeout=args.timeout)
         except Exception as e:
             print(f"Failed {e}")
+
 
 if __name__ == "__main__":
     main()

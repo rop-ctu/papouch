@@ -42,10 +42,15 @@ quido-cli --conn eth:192.168.1.254 inst OR 1
 
 **quido-list**
 
+Broadcast discovery is sent across all active IPv4 interfaces automatically.
+
 ``` shell
 quido-list
 # 01 mac: 00-1A-2B-3C-4D-5E ip: 192.168.1.123
 # Found 1 devices.
+
+quido-list --interface eno1
+quido-list --timeout 1.5
 ```
 
 **quido-test**
