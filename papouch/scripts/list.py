@@ -1,3 +1,17 @@
+"""Network discovery utility for Papouch Quido devices.
+
+Developer notes:
+- This tool uses Linux AF_PACKET raw sockets to send one broadcast frame per
+  interface. This avoids relying on kernel routing heuristics for regular UDP
+  broadcast and gives deterministic per-interface discovery.
+- Packet headers are built manually (Ethernet + IPv4 + UDP) because AF_PACKET
+  expects complete L2/L3/L4 framing.
+- Receiving uses a deadline with select(), not socket timeout alone. On busy
+  interfaces, unrelated traffic can keep recvfrom() unblocked forever.
+- This implementation is Linux-specific and requires raw-socket privileges
+  (root or CAP_NET_RAW).
+"""
+
 from typing import List
 from dataclasses import dataclass
 import socket
@@ -39,6 +53,7 @@ def get_iface_ip(iface):
 
 
 def checksum(data):
+    """Return IPv4 header checksum for bytes payload."""
     if len(data) % 2:
         data += b"\x00"
     s = sum(struct.unpack("!%dH" % (len(data) // 2), data))
@@ -51,6 +66,7 @@ def checksum(data):
 
 
 def build_ip(src_ip, dst_ip, payload_len):
+    """Build minimal IPv4 header for UDP payload."""
     ver_ihl = 0x45
     tos = 0
     total_len = 20 + 8 + payload_len
@@ -95,6 +111,7 @@ def build_ip(src_ip, dst_ip, payload_len):
 
 
 def build_udp(src_port, dst_port, payload):
+    """Build UDP header with zero checksum."""
     length = 8 + len(payload)
     return struct.pack("!HHHH", src_port, dst_port, length, 0)
 
@@ -121,6 +138,7 @@ def get_iface_info(iface: str) -> Iface:
 
 
 def list_active_ifaces() -> List[Iface]:
+    """Return non-loopback interfaces with MAC and best-effort IPv4."""
     result = []
     for _, iface in socket.if_nameindex():
         if iface == "lo":
@@ -135,6 +153,7 @@ def list_active_ifaces() -> List[Iface]:
 
 
 def run_discovery_on(iface: Iface, timeout: float = DEFAULT_TIMEOUT):
+    """Send discovery packet on one interface and print matching replies."""
     src_mac = iface.mac
     src_ip = iface.ip
 
@@ -147,7 +166,7 @@ def run_discovery_on(iface: Iface, timeout: float = DEFAULT_TIMEOUT):
 
     packet = eth_header + ip_header + udp_header + PAYLOAD
 
-    # Raw socket (send + receive)
+    # AF_PACKET captures link-layer frames on a single interface.
     sock = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(ETH_P_ALL))
     sock.bind((iface.name, 0))
 
@@ -167,12 +186,12 @@ def run_discovery_on(iface: Iface, timeout: float = DEFAULT_TIMEOUT):
 
         pkt, _ = sock.recvfrom(65535)
 
-        # --- Ethernet ---
+        # Ethernet header starts at byte 0, EtherType at bytes 12..13.
         eth_proto = struct.unpack("!H", pkt[12:14])[0]
         if eth_proto != ETH_P_IP:
             continue
 
-        # --- IP ---
+        # IPv4 header follows Ethernet at offset 14.
         ip_header = pkt[14:34]
         proto = ip_header[9]
         if proto != 17:  # UDP
@@ -180,10 +199,11 @@ def run_discovery_on(iface: Iface, timeout: float = DEFAULT_TIMEOUT):
 
         src_ip = socket.inet_ntoa(ip_header[12:16])
 
-        # --- UDP ---
+        # UDP header follows minimal 20-byte IPv4 header.
         udp_header = pkt[34:42]
         src_port = struct.unpack("!H", udp_header[0:2])[0]
 
+        # Papouch discovery replies are expected from UDP port 30718.
         if src_port != PORT:
             continue
 
