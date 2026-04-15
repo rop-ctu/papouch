@@ -44,16 +44,7 @@ quido-cli --conn eth:192.168.1.254 inst OR 1
 
 Broadcast discovery is sent across all active IPv4 interfaces automatically.
 
-``` shell
-sudo quido-list
-# 01 mac: 00-1A-2B-3C-4D-5E ip: 192.168.1.123
-# Found 1 devices.
-
-sudo quido-list --interface eno1
-sudo quido-list --timeout 1.5
-```
-
-``` text
+```sh
 $ quido-list --help
 usage: quido-list [-h] [-i INTERFACE] [-t TIMEOUT]
 
@@ -70,6 +61,13 @@ options:
 Note: discovery uses Linux raw sockets (AF_PACKET). Run as root or grant
 CAP_NET_RAW (for example via sudo).
 ```
+
+Using `sudo` and venv does not work well so it is also possible to call the module directly, while in the root directory run:
+
+```sh
+sudo python -m papouch.scripts.list [-h] [-i IFACE] [-t TIMEOUT]
+```
+
 
 **quido-test**
 
