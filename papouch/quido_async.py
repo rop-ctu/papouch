@@ -1,15 +1,13 @@
 
 import asyncio
 import logging
-from typing import Any, Awaitable, Callable, List, Optional
 import serial_asyncio
+
+from typing import Any, Awaitable, Callable, List, Optional
+from papouch.error import QuidoError
 
 
 log = logging.getLogger()
-
-class QuidoError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
 
 
 class QuidoUSB():

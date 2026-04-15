@@ -2,8 +2,7 @@
 import asyncio
 import logging
 import argparse
-from papouch.quido_async import QuidoUSB
-from papouch.scripts.common import create_quido
+from ..quido_async import QuidoUSB
 from .common import add_connection_arguments
 import time
 
@@ -65,3 +64,7 @@ async def run():
 
 def main():
     asyncio.run(run())
+
+
+if __name__ == "__main__":
+    main()
