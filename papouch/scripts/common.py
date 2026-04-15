@@ -1,4 +1,3 @@
-
 import argparse
 
 from papouch.quido import Quido
@@ -7,12 +6,24 @@ from papouch.quido import Quido
 def add_connection_arguments(parser: argparse.ArgumentParser):
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--eth', type=str, help="Connecto to Ethernet device (--eth 192.168.1.2)")
-    group.add_argument('--usb', type=str, help="Connecto to USB device (--usb /dev/ttyUSB0)")
+    group.add_argument(
+        "--eth", type=str, help="Connecto to Ethernet device (--eth 192.168.1.2)"
+    )
+    group.add_argument(
+        "--usb", type=str, help="Connecto to USB device (--usb /dev/ttyUSB0)"
+    )
 
     # Define common options
-    parser.add_argument("-p", "--port", type=int, default=10001, help="Port number [default: 10001]")
-    parser.add_argument("-b", "--baud", type=int, default=115200, help="Baud rate for USB [default: 115200]")
+    parser.add_argument(
+        "-p", "--port", type=int, default=1001, help="Port number [default: 1001]"
+    )
+    parser.add_argument(
+        "-b",
+        "--baud",
+        type=int,
+        default=115200,
+        help="Baud rate for USB [default: 115200]",
+    )
 
 
 def add_logging_arguments(parser: argparse.ArgumentParser):
