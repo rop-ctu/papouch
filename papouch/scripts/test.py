@@ -58,3 +58,7 @@ def main():
     print("Setting all outputs to HIGH for 1 s")
     for i in range(args.outputs):
         q.set_output(i+1, 1, 1)
+
+
+if __name__ == "__main__":
+    main()
