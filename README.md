@@ -8,6 +8,7 @@ This is a list of tools provided with the Papouch library that demonstrate the p
 
  - **quido-cli** Command line interface for the Quido family of devices.
  - **quido-test** Test utility for the Quido device.
+ - **quido-async-test** Async USB test utility for the Quido device.
  - **quido-list** List all devices on the network segment, prints out MAC and IP addresses.
 
 ## Usage
@@ -17,7 +18,7 @@ The following is the simplest example of the library in action.
 ``` python
 from papouch import Quido
 
-# initialize Quido ETH
+# initialize Quido USB
 q = Quido()
 q.connect_usb('/dev/ttyUSB0')
 
@@ -31,34 +32,33 @@ q.set_output(1, True) # => True
 
 **quido-cli**
 
-```
-$ quido-cli -h
-Controll Papouch Quido from the command line
-
-Usage:
-  quido-cli [options] seto <ch>...
-  quido-cli [options] geto <ch>...
-  quido-cli [options] geti <ch>...
-  quido-cli [options] info
-  quido-cli [options] monitor <ch>
-  quido-cli [options] <inst> [<data>] [<adr>]
-  quido-cli --help
-
-Options:
-  --debug
-  --help
-  --conn CONN    [default: usb:/dev/ttyUSB0]
-
-Examples:
-  quido-cli --con eth:192.168.1.254 read
-  quido-cli seto 1H 2L 3T
-  quido-cli geto 1 2 3
-  quido-cli geti 1 2 3
+``` shell
+quido-cli --conn usb:/dev/ttyUSB0 info
+quido-cli --conn eth:192.168.1.254 seto 1H 2L 3T
+quido-cli --conn eth:192.168.1.254 geto 1 2 3
+quido-cli --conn eth:192.168.1.254 geti 1 2 3
+quido-cli --conn eth:192.168.1.254 inst OR 1
 ```
 
 **quido-list**
 
+``` shell
+quido-list
+# 01 mac: 00-1A-2B-3C-4D-5E ip: 192.168.1.123
+# Found 1 devices.
 ```
+
+**quido-test**
+
+``` shell
+quido-test --usb /dev/ttyUSB0
+quido-test --eth 192.168.1.254 --port 1001
+```
+
+**quido-async-test**
+
+``` shell
+quido-async-test --usb /dev/ttyUSB0
 ```
 
 ## Library Reference
@@ -83,34 +83,24 @@ Examples:
   - `__init__(ip)`
   - `set_output(n, state, duration=None)`
 
-## Instalation
+## Installation
 
 Dependencies:
 
  - [pyserial](https://pythonhosted.org/pyserial/)
+ - [pyserial-asyncio](https://pypi.org/project/pyserial-asyncio/)
  - [requests](http://docs.python-requests.org/en/latest/)
- - [docopt](http://docopt.org/)
 
-Install with pip
+Install for local development (editable mode):
 
 ``` shell
-pip install git+http://gitlab.ciirc.cvut.cz/b635/papouch.git
+python -m pip install -e .
 ```
 
-or without pip
+Install as a regular package:
 
 ``` shell
-git clone http://gitlab.ciirc.cvut.cz/b635/papouch.git
-cd papouch
-sudo python setup.py install
-```
-
-or
-
-``` shell
-git clone git@gitlab.ciirc.cvut.cz:b635/papouch.git
-cd papouch
-sudo python setup.py install
+python -m pip install .
 ```
 
 ## ROS
