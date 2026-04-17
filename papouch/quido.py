@@ -41,7 +41,6 @@ class Quido(object):
         self.socket.sendall(msg)
         log.debug("Cmd send: %s", msg)
         recv = self.__recv_tcp(buff)
-        log.debug("Cmd recv: %s", recv)
         return recv
 
     def __recv_tcp(self, buff: int = 1000) -> bytes:
