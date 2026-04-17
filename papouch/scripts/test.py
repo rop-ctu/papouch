@@ -51,16 +51,16 @@ def main():
 
     for i in range(args.outputs):
         print(f"Output({i+1}):        True")
-        q.set_output(i+1, 1)
+        q.set_output(i+1, True)
         time.sleep(0.5)
         print(f"Output({i+1}):        False")
-        q.set_output(i+1, 0)
+        q.set_output(i+1, False)
 
 
     print()
     print("Setting all outputs to HIGH for 1 s")
     for i in range(args.outputs):
-        q.set_output(i+1, 1, 1)
+        q.set_output(i+1, True, 1)
 
 
 if __name__ == "__main__":

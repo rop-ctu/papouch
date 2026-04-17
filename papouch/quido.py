@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 import logging
 from typing import Any, List, Optional
-import requests
 import socket
 import serial
 
@@ -150,7 +149,7 @@ class Quido(object):
         else:
             raise QuidoError("Failed to get input", recv)
 
-    def wait_for_edge(self, n: int, timeout: float = None) -> bool:
+    def wait_for_edge(self, n: int, timeout: Optional[float] = None) -> bool:
         v0 = self.get_input(n)
         v1 = v0
 
