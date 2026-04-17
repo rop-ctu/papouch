@@ -23,7 +23,7 @@ class Quido(object):
     def __init__(self):
         self.connection = 'none'
 
-    def connect_tcp(self, ip, port=1001):
+    def connect_tcp(self, ip:str, port:int=1001):
         self.connection = 'tcp'
         self.tcp_ip = ip
         self.tcp_port = port
@@ -34,7 +34,7 @@ class Quido(object):
         self.cmd(b'IS', b'0') # disable sending changes
         log.debug("Connected to tcp ip: %s port: %s", self.tcp_ip, self.tcp_port)
 
-    def __cmd_tcp(self, inst, data=b'', adr=b'$', buff=1000) -> bytes:
+    def __cmd_tcp(self, inst:bytes, data:bytes=b'', adr:bytes=b'$', buff:int=1000) -> bytes:
         msg = b'*B' + adr + inst + data + b'\r'
         self.socket.send(msg)
         log.debug("Cmd send: %s", msg)
@@ -42,12 +42,12 @@ class Quido(object):
         log.debug("Cmd recv: %s", recv)
         return recv
 
-    def __recv_tcp(self, buff=1000) -> bytes:
+    def __recv_tcp(self, buff:int=1000) -> bytes:
         recv = self.socket.recv(buff)
         log.debug("Cmd recv: %s", recv)
         return recv
 
-    def connect_usb(self, dev, baud=115200):
+    def connect_usb(self, dev:str, baud:int=115200):
         self.connection = 'serial'
         self.dev = dev
         self.baud = baud
@@ -56,7 +56,7 @@ class Quido(object):
         self.recv = self.__recv_serial
         log.debug("Connected to serial dev: %s baud: %d", self.dev, self.baud)
 
-    def __cmd_serial(self, inst, data=b'', adr=b'$', buff=1000) -> bytes:
+    def __cmd_serial(self, inst:bytes, data:bytes=b'', adr:bytes=b'$', buff:int=1000) -> bytes:
         msg = b'*B' + adr + inst + data + b'\r'
         self.ser.write(msg)
         self.ser.flush()
@@ -72,15 +72,14 @@ class Quido(object):
     def check_reponse(self, resp) -> bool:
         return len(resp) > 3 and resp[3:4] == b'0'
 
-    def reset(self):
+    def reset(self) -> bool:
         inst = b'RE'
         recv = self.cmd(inst)
 
         if self.check_reponse(recv):
             return True
         else:
-            log.error("Unable reset, response: %s", recv)
-            return None
+            raise QuidoError("Unable to reset", recv)
 
     def get_name(self) -> List[str]:
         inst = b'?'
@@ -90,10 +89,9 @@ class Quido(object):
             text = recv[4:-1].decode('utf-8')
             return [v.strip() for v in text.split(';')]
         else:
-            log.error("Unable to read name, response: %s", recv)
             raise QuidoError("Unable to read name", recv)
 
-    def get_temperature(self, n=1):
+    def get_temperature(self, n=1) -> float:
         inst = b'TR'
         data = as_bytes(n)
         recv = self.cmd(inst, data)
@@ -101,10 +99,9 @@ class Quido(object):
         if self.check_reponse(recv):
             return float(recv[4:-2])
         else:
-            log.error("Unable to read temperature, response: %s", recv)
-            return None
+            raise QuidoError("Failed to read temperature", recv)
 
-    def set_output(self, n, state, duration=None):
+    def set_output(self, n:int, state:bool, duration:Optional[int]=None) -> bool:
         if duration is None:
             inst = b'OS'
             data = as_bytes(n) + b'H' if state else as_bytes(n) + b'L'
@@ -117,10 +114,9 @@ class Quido(object):
         if self.check_reponse(recv):
             return True
         else:
-            log.error("Unable to set output, response: %s", recv)
-            return False
+            raise QuidoError("Failed to set output", recv)
 
-    def get_output(self, n):
+    def get_output(self, n:int) -> bool:
         inst = b'OR'
         data = as_bytes(n)
         recv = self.cmd(inst, data)
@@ -128,10 +124,9 @@ class Quido(object):
         if self.check_reponse(recv):
             return True if recv[4] == 'H' else False
         else:
-            log.error("Unable to get output, response: %s", recv)
-            return False
+            raise QuidoError("Failed to get output", recv)
 
-    def get_input(self, n):
+    def get_input(self, n:int) -> bool:
         inst = b'IR'
         data = as_bytes(n)
         recv = self.cmd(inst, data)
@@ -139,33 +134,32 @@ class Quido(object):
         if self.check_reponse(recv):
             return True if recv[4] == 'H' else False
         else:
-            log.error("Unable to get input, response: %s", recv)
-            return False
+            raise QuidoError("Failed to get input", recv)
 
-    def wait_for_edge(self, n: int, timeout=None):
+    def wait_for_edge(self, n: int, timeout:float=None) -> bool:
         v0 = self.get_input(n)
         v1 = v0
 
         recv = self.cmd(b'IS', b'1')
         if not self.check_reponse(recv):
-            raise PapouchError("IS1 command failed", recv)
+            raise QuidoError("IS1 command failed", recv)
 
         while v1 == v0:
             recv = self.recv()
 
             if self.check_reponse(recv):
-                raise PapouchError("Wrong reply", recv)
+                raise QuidoError("Wrong reply", recv)
             else:
                 v1 = get_val_is(recv, n)
 
         recv = self.cmd(b'IS', b'0')
         if not self.check_reponse(recv):
-            raise PapouchError("IS0 command failed", recv)
+            raise QuidoError("IS0 command failed", recv)
 
         return v1
 
 
-def get_val_is(recv, n):
+def get_val_is(recv, n:int) -> bool:
     recv = recv[5:]
     return True if recv[n-1] == 'H' else False
 
@@ -180,39 +174,5 @@ def read_util(ser, eol:bytes = b'\r') -> bytes:
             buffer.extend(one_byte)
 
 
-def as_bytes(val: Any):
+def as_bytes(val: Any) -> bytes:
     return str(val).encode()
-
-
-class QuidoWeb(object):
-
-    HIGH = 's'
-    LOW = 'r'
-    TOGGLE = 'i'
-    ALLHIGH = 'S'
-    ALLLOW = 'R'
-
-    def __init__(self, ip):
-        """Initialize Quido module
-
-        Arguments:
-          ip    IP address of the module
-
-
-        """
-        self.ip = ip
-
-    def set_output(self, n, state, duration=None):
-        """
-        """
-        if state is True:
-            action = 's'
-        elif state is False:
-            action = 'r'
-        else:
-            action = state
-
-        cmd = "http://{}/set.xml?type={}&id={}".format(self.ip, action, n)
-
-        # Call GET request
-        r = requests.get(cmd)
