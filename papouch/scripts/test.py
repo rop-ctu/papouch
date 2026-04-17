@@ -1,6 +1,6 @@
 import logging
 import argparse
-from papouch import Quido
+from papouch import QuidoError
 from papouch.scripts.common import create_quido
 from .common import add_connection_arguments
 import time
@@ -40,7 +40,10 @@ def main():
 
     print("Name:           ", name[0])
     print("Version:        ", name[1])
-    print("Temperature(1): ", q.get_temperature(1), 'C')
+    try:
+        print("Temperature(1): ", q.get_temperature(1), 'C')
+    except QuidoError as e:
+        print(e)
     print()
     for i in range(args.inputs):
         val = q.get_input(i+1)
