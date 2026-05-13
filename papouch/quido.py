@@ -126,7 +126,7 @@ class Quido(object):
         if self.check_reponse(recv):
             return True
         else:
-            raise QuidoError("Failed to set output", recv)
+            raise QuidoError(f"Failed to set output {n} to {state}", recv)
 
     def get_output(self, n: int) -> bool:
         inst = b"OR"
@@ -136,7 +136,7 @@ class Quido(object):
         if self.check_reponse(recv):
             return True if recv[4] == "H" else False
         else:
-            raise QuidoError("Failed to get output", recv)
+            raise QuidoError(f"Failed to get output {n}", recv)
 
     def get_input(self, n: int) -> bool:
         inst = b"IR"
@@ -146,7 +146,7 @@ class Quido(object):
         if self.check_reponse(recv):
             return True if recv[4] == "H" else False
         else:
-            raise QuidoError("Failed to get input", recv)
+            raise QuidoError(f"Failed to get input {n}", recv)
 
     def wait_for_edge(self, n: int, timeout: Optional[float] = None) -> bool:
         v0 = self.get_input(n)
